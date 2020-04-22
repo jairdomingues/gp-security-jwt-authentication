@@ -1,0 +1,3 @@
+insert into role (id, uuid, change_date, create_date, change_user, create_user, version, name, description) values ('1', 'aasa11131', current_timestamp, current_timestamp, 'admin', 'admin', 0, 'ROLE_USER', 'profile user')
+insert into role (id, uuid, change_date, create_date, change_user, create_user, version, name, description) values ('2', 'aasa11132', current_timestamp, current_timestamp, 'admin', 'admin', 0, 'ROLE_MODERATOR', 'profile user')
+insert into role (id, uuid, change_date, create_date, change_user, create_user, version, name, description) values ('3', 'aasa11133', current_timestamp, current_timestamp, 'admin', 'admin', 0, 'ROLE_ADMIN', 'profile user')
