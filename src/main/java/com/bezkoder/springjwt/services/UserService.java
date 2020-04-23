@@ -188,7 +188,7 @@ public class UserService {
 	@Async	
 	public CompletableFuture<String> createAccount(String accountShare) {
 		
-	    final String uri = "http://localhost:8080/tansaction_history";
+	    final String uri = "https://green-pay-v1.uc.r.appspot.com/tansaction_history";
 	    TransactionHistoryRequest push = new TransactionHistoryRequest();
 	    push.setAmount(new BigDecimal("10.00"));
 	    push.setHistory("Pagamento indicação de amigos.");
