@@ -2,6 +2,7 @@ package com.bezkoder.springjwt.services;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -89,7 +90,8 @@ public class UserService {
 		List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
 				.collect(Collectors.toList());
 
-		return new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(), user.getPhone(), user.getBirthday(), roles);
+		return new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(),
+				user.getPhone(), user.getBirthday(), roles);
 
 	}
 
@@ -104,7 +106,7 @@ public class UserService {
 			throw new CustomGenericNotFoundException("Error: Username is already taken!");
 		}
 
-			if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+		if (userRepository.existsByEmail(signUpRequest.getEmail())) {
 			throw new CustomGenericNotFoundException("Error: Email is already in use!");
 		}
 
@@ -151,61 +153,68 @@ public class UserService {
 		}
 	}
 
+	public List<JwtResponse> findAllUsers() {
+		List<User> users = (List<User>) userRepository.findAll();
+		return users.stream().sorted(Comparator.comparing(User::getCreateDate).reversed()).map(this::convertToResponse)
+				.collect(Collectors.toList());
+	}
+
 //	public UserDTO findUserById(Long id) {
 //		User user = userRepository.findById(id)
 //				.orElseThrow(() -> new CustomGenericNotFoundException("ID: " + id.toString() + " não encontrado"));
 //		return convertToDTO(user);
 //	}
 
-//	private UserDTO convertToDTO(User user) {
-//		ModelMapper modelMapper = new ModelMapper();
-//		return modelMapper.map(user, UserDTO.class);
-//	}
-
 	private User convertToEntity(SignupRequest signUpRequest) {
 		ModelMapper modelMapper = new ModelMapper();
 		return modelMapper.map(signUpRequest, User.class);
 	}
-	
-	@Async	
-	public CompletableFuture<String> createNotificationUser() {
-	    final String uri = "http://localhost:8080/notification/token";
-	    PushNotificationRequest push = new PushNotificationRequest();
-	    push.setTitle("Hey you!");
-	    push.setMessage("Watch out!");
-	    push.setToken("cJ5ydBBWgY9PPynG2Sb9M2:APA91bGZw-WZt7whGKbAxKXBWzLVymWjxB8ZtoSVZYufsrtHgAog0dzDS3I4KI5juHwJOLvTC6WfxMcoy63XKQgEjaykncYO7fLr6417sMA8NLcpn-3KOiFkH9RjxiW9ytNSzF6HZhFZ");
-	    push.setTopic("");
-	    
-	    HttpHeaders headers = new HttpHeaders();
-	    headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-	    HttpEntity<PushNotificationRequest> entity = new HttpEntity<PushNotificationRequest>(push, headers);
-	    
-	    RestTemplate restTemplate = new RestTemplate();
-	    ResponseEntity<String> result = restTemplate.postForEntity(uri, entity, String.class);
-	    return CompletableFuture.completedFuture("OK");
-	}
-	
-	@Async	
-	public CompletableFuture<String> createAccount(String accountShare) {
-		
-	    final String uri = "https://green-pay-v1.uc.r.appspot.com/tansaction_history";
-	    TransactionHistoryRequest push = new TransactionHistoryRequest();
-	    push.setAmount(new BigDecimal("10.00"));
-	    push.setHistory("Pagamento indicação de amigos.");
-	    push.setIdAccount(new Long(accountShare));
-	    push.setOperation("SHARE");
-	    push.setOrderId(1l);
-	    push.setStatus("BLOCK");
-	    push.setTransactionType("CREDIT");
-	    
-	    HttpHeaders headers = new HttpHeaders();
-	    headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-	    HttpEntity<TransactionHistoryRequest> entity = new HttpEntity<TransactionHistoryRequest>(push, headers);
-	    
-	    RestTemplate restTemplate = new RestTemplate();
-	    ResponseEntity<String> result = restTemplate.postForEntity(uri, entity, String.class);
-	    return CompletableFuture.completedFuture("OK");
+
+	private JwtResponse convertToResponse(User user) {
+		ModelMapper modelMapper = new ModelMapper();
+		return modelMapper.map(user, JwtResponse.class);
 	}
 
-	
+	@Async
+	public CompletableFuture<String> createNotificationUser() {
+		final String uri = "http://localhost:8080/notification/token";
+		PushNotificationRequest push = new PushNotificationRequest();
+		push.setTitle("Hey you!");
+		push.setMessage("Watch out!");
+		push.setToken(
+				"cJ5ydBBWgY9PPynG2Sb9M2:APA91bGZw-WZt7whGKbAxKXBWzLVymWjxB8ZtoSVZYufsrtHgAog0dzDS3I4KI5juHwJOLvTC6WfxMcoy63XKQgEjaykncYO7fLr6417sMA8NLcpn-3KOiFkH9RjxiW9ytNSzF6HZhFZ");
+		push.setTopic("");
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+		HttpEntity<PushNotificationRequest> entity = new HttpEntity<PushNotificationRequest>(push, headers);
+
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<String> result = restTemplate.postForEntity(uri, entity, String.class);
+		return CompletableFuture.completedFuture("OK");
+	}
+
+	@Async
+	public CompletableFuture<String> createAccount(String accountShare) {
+
+//		final String uri = "https://green-pay-v1.uc.r.appspot.com/tansaction_history";
+		final String uri = "http://localhost:8080/tansaction_history";
+		TransactionHistoryRequest push = new TransactionHistoryRequest();
+		push.setAmount(new BigDecimal("10.00"));
+		push.setHistory("Pagamento indicação de amigos.");
+		push.setIdAccount(new Long(accountShare));
+		push.setOperation("SHARE");
+		push.setOrderId(1l);
+		push.setStatus("BLOCKED");
+		push.setTransactionType("CREDIT");
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+		HttpEntity<TransactionHistoryRequest> entity = new HttpEntity<TransactionHistoryRequest>(push, headers);
+
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<String> result = restTemplate.postForEntity(uri, entity, String.class);
+		return CompletableFuture.completedFuture("OK");
+	}
+
 }
