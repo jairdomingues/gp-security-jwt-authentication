@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -18,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bezkoder.springjwt.payload.request.LoginRequest;
 import com.bezkoder.springjwt.payload.request.SignupRequest;
 import com.bezkoder.springjwt.payload.response.JwtResponse;
-import com.bezkoder.springjwt.payload.response.MessageResponse;
 import com.bezkoder.springjwt.services.UserService;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -40,12 +41,18 @@ public class AuthController {
 	@PostMapping(produces = "application/json")
 	@ResponseStatus(HttpStatus.CREATED)
 	public ResponseEntity<?> createUser(@Valid @RequestBody SignupRequest signupRequest) {
-		userService.createUser(signupRequest);
+		String id = userService.createUser(signupRequest);
 		userService.createNotificationUser();
 		if (signupRequest.getAccountShare() != null) {
 			userService.createAccount(signupRequest.getAccountShare());
 		}
-		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+		return ResponseEntity.ok(id);
+	}
+
+	@PutMapping("/change_password/{id}")
+	@ResponseStatus(HttpStatus.OK)
+	public void changePassword(@PathVariable(name = "id") Long userId, @RequestBody String newPassword) {
+		userService.changePassword(userId, newPassword);
 	}
 
 	@GetMapping(produces = "application/json")

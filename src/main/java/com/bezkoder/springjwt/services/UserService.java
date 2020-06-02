@@ -89,9 +89,9 @@ public class UserService {
 		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 		List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
 				.collect(Collectors.toList());
-
+		
 		return new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(),
-				user.getPhone(), user.getBirthday(), roles);
+				user.getPhone(), user.getBirthday(), user.getEmailValid(), roles);
 
 	}
 
@@ -100,7 +100,7 @@ public class UserService {
 //		return users.stream().map(this::convertToDTO).collect(Collectors.toList());
 //	}
 
-	public void createUser(SignupRequest signUpRequest) {
+	public String createUser(SignupRequest signUpRequest) {
 
 		if (userRepository.existsByUsername(signUpRequest.getUsername())) {
 			throw new CustomGenericNotFoundException("Error: Username is already taken!");
@@ -111,11 +111,11 @@ public class UserService {
 		}
 
 		User user = this.convertToEntity(signUpRequest);
+		Boolean emailValid = true;
 		user.setPassword(encoder.encode(signUpRequest.getPassword()));
 		user.setActive(true);
 		user.setAdmin(false);
 		user.setBlock(false);
-		user.setEmailValid(false);
 		user.setLastLoginDate(new Date());
 		Set<String> strRoles = signUpRequest.getRole();
 		Set<Role> roles = new HashSet<>();
@@ -130,27 +130,31 @@ public class UserService {
 					Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
 							.orElseThrow(() -> new CustomGenericNotFoundException("Error: Role is not found."));
 					roles.add(adminRole);
-
 					break;
 				case "mod":
 					Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
 							.orElseThrow(() -> new CustomGenericNotFoundException("Error: Role is not found."));
 					roles.add(modRole);
-
 					break;
 				default:
-					Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+					Role userRole = roleRepository.findByName(ERole.valueOf (strRoles.stream().findFirst().get()))
 							.orElseThrow(() -> new CustomGenericNotFoundException("Error: Role is not found."));
 					roles.add(userRole);
 				}
 			});
 		}
+		if (roles.stream().findFirst().get().getName().equals(ERole.ROLE_PARTNER)) {
+			emailValid = false;
+		}
+		user.setEmailValid(emailValid);
 		user.setRoles(roles);
 		try {
 			userRepository.save(user);
 		} catch (Exception e) {
 			throw new CustomGenericNotFoundException(e.getMessage());
 		}
+		
+		return user.getId().toString();
 	}
 
 	public List<JwtResponse> findAllUsers() {
@@ -159,12 +163,14 @@ public class UserService {
 				.collect(Collectors.toList());
 	}
 
-//	public UserDTO findUserById(Long id) {
-//		User user = userRepository.findById(id)
-//				.orElseThrow(() -> new CustomGenericNotFoundException("ID: " + id.toString() + " não encontrado"));
-//		return convertToDTO(user);
-//	}
-
+	public void changePassword(Long userId, String newPassword) {
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new RuntimeException("Error: User is not found."));
+		user.setPassword(encoder.encode(newPassword));
+		user.setEmailValid(true);
+		userRepository.save(user);
+	}
+	
 	private User convertToEntity(SignupRequest signUpRequest) {
 		ModelMapper modelMapper = new ModelMapper();
 		return modelMapper.map(signUpRequest, User.class);

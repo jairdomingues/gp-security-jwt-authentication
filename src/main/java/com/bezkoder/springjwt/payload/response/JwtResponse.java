@@ -11,18 +11,21 @@ public class JwtResponse {
 	private String email;
 	private String phone;
 	private Date birthday;
+	private Boolean emailValid;
 	private List<String> roles;
 
 	public JwtResponse() {
 	}
-	
-	public JwtResponse(String accessToken, Long id, String username, String email, String phone, Date birthday, List<String> roles) {
+
+	public JwtResponse(String accessToken, Long id, String username, String email, String phone, Date birthday,
+			Boolean emailValid, List<String> roles) {
 		this.token = accessToken;
 		this.id = id;
 		this.username = username;
 		this.email = email;
 		this.phone = phone;
 		this.birthday = birthday;
+		this.emailValid = emailValid;
 		this.roles = roles;
 	}
 
@@ -85,6 +88,13 @@ public class JwtResponse {
 	public void setBirthday(Date birthday) {
 		this.birthday = birthday;
 	}
-	
-	
+
+	public Boolean getEmailValid() {
+		return emailValid;
+	}
+
+	public void setEmailValid(Boolean emailValid) {
+		this.emailValid = emailValid;
+	}
+
 }
