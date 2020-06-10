@@ -49,6 +49,16 @@ public class AuthController {
 		return ResponseEntity.ok(id);
 	}
 
+	@PostMapping("/import")
+	@ResponseStatus(HttpStatus.CREATED)
+	public ResponseEntity<?> createUserImport(@Valid @RequestBody SignupRequest signupRequest) {
+		String id = "exists";
+		if (!userService.findByEmail(signupRequest.getEmail())) {
+			id = userService.createUser(signupRequest);
+		}
+		return ResponseEntity.ok(id);
+	}
+
 	@PutMapping("/change_password/{id}")
 	@ResponseStatus(HttpStatus.OK)
 	public void changePassword(@PathVariable(name = "id") Long userId, @RequestBody String newPassword) {

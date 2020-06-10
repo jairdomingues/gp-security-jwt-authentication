@@ -163,6 +163,10 @@ public class UserService {
 				.collect(Collectors.toList());
 	}
 
+	public Boolean findByEmail(String email) {
+		return userRepository.existsByEmail(email);
+	}
+
 	public void changePassword(Long userId, String newPassword) {
 		User user = userRepository.findById(userId)
 				.orElseThrow(() -> new RuntimeException("Error: User is not found."));
